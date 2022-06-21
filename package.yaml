@@ -1,7 +1,7 @@
 name:                srv
 version:             0.1.0.0
 github:              "githubuser/srv"
-license:             BSD3
+license:             Apache-2.0
 author:              "Author name here"
 maintainer:          "example@example.com"
 copyright:           "2022 Author name here"
@@ -21,12 +21,16 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- wai
+- wai-app-static
+- warp
+- warp-tls
 
 library:
   source-dirs: src
 
 executables:
-  srv-exe:
+  srv:
     main:                Main.hs
     source-dirs:         app
     ghc-options:

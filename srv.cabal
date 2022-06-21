@@ -12,7 +12,7 @@ bug-reports:    https://github.com/githubuser/srv/issues
 author:         Author name here
 maintainer:     example@example.com
 copyright:      2022 Author name here
-license:        BSD3
+license:        Apache-2.0
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
@@ -32,9 +32,13 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , wai
+    , wai-app-static
+    , warp
+    , warp-tls
   default-language: Haskell2010
 
-executable srv-exe
+executable srv
   main-is: Main.hs
   other-modules:
       Paths_srv
@@ -44,6 +48,10 @@ executable srv-exe
   build-depends:
       base >=4.7 && <5
     , srv
+    , wai
+    , wai-app-static
+    , warp
+    , warp-tls
   default-language: Haskell2010
 
 test-suite srv-test
@@ -57,4 +65,8 @@ test-suite srv-test
   build-depends:
       base >=4.7 && <5
     , srv
+    , wai
+    , wai-app-static
+    , warp
+    , warp-tls
   default-language: Haskell2010
