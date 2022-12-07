@@ -25,6 +25,7 @@ dependencies:
 - wai-app-static
 - warp
 - warp-tls
+- async
 
 library:
   source-dirs: src
