@@ -26,6 +26,8 @@ dependencies:
 - warp-tls
 - async
 - yaml
+- directory
+- containers
 
 executables:
   srv:
