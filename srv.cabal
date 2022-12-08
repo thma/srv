@@ -17,27 +17,10 @@ license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
-    ChangeLog.md
 
 source-repository head
   type: git
   location: https://github.com/githubuser/srv
-
-library
-  exposed-modules:
-      Lib
-  other-modules:
-      Paths_srv
-  hs-source-dirs:
-      src
-  build-depends:
-      async
-    , base >=4.7 && <5
-    , wai
-    , wai-app-static
-    , warp
-    , warp-tls
-  default-language: Haskell2010
 
 executable srv
   main-is: Main.hs
@@ -49,27 +32,9 @@ executable srv
   build-depends:
       async
     , base >=4.7 && <5
-    , srv
     , wai
     , wai-app-static
     , warp
     , warp-tls
-  default-language: Haskell2010
-
-test-suite srv-test
-  type: exitcode-stdio-1.0
-  main-is: Spec.hs
-  other-modules:
-      Paths_srv
-  hs-source-dirs:
-      test
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
-  build-depends:
-      async
-    , base >=4.7 && <5
-    , srv
-    , wai
-    , wai-app-static
-    , warp
-    , warp-tls
+    , yaml
   default-language: Haskell2010
