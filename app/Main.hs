@@ -3,14 +3,14 @@
 
 module Main where
 
-import Control.Concurrent.Async
 import qualified Data.Yaml as Yaml
 import GHC.Generics (Generic)
 import Network.Wai (Application)
-import Network.Wai.Application.Static
-import Network.Wai.Handler.Warp
-import Network.Wai.Handler.WarpTLS
-import System.Directory
+import Network.Wai.Application.Static (staticApp, defaultFileServerSettings)
+import Network.Wai.Handler.Warp (run, setPort, defaultSettings)
+import Network.Wai.Handler.WarpTLS (runTLS, tlsSettings)
+import System.Directory (doesFileExist)
+import Control.Concurrent.Async (mapConcurrently_)
 
 data WarpHandler = Http | Https deriving (Show, Eq, Generic, Yaml.FromJSON, Yaml.ToJSON)
 
@@ -75,3 +75,4 @@ main = do
         return defaultConfig
 
   mapConcurrently_ id (deriveActions config)
+
