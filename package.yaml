@@ -28,6 +28,8 @@ dependencies:
 - yaml
 - directory
 - containers
+- raw-strings-qq
+- bytestring
 
 executables:
   srv:

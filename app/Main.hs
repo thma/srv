@@ -10,9 +10,11 @@ import           Network.Wai                    (Application)
 import           Network.Wai.Application.Static (defaultFileServerSettings,
                                                  staticApp)
 import           Network.Wai.Handler.Warp       (defaultSettings, run, setPort)
-import           Network.Wai.Handler.WarpTLS    (runTLS, tlsSettings)
+import           Network.Wai.Handler.WarpTLS    (runTLS, tlsSettings, TLSSettings)
 import           System.Directory               (doesFileExist)
+import           DemoCertificate                (demoTLSSettings)
 
+-- | a data type representing Http or Https warp handlers
 data WarpHandler = HTTP | HTTPS deriving (Show, Eq, Generic, Yaml.FromJSON, Yaml.ToJSON)
 
 -- | a tuple (WarpHandler, IP port)
@@ -21,8 +23,8 @@ type Handler = (WarpHandler, Int)
 -- | configuration settings that specify the behaviour of the server
 data SrvConfig = SrvConfig
   { handlers     :: ![Handler],
-    pathToCert   :: !FilePath,
-    pathToKey    :: !FilePath,
+    pathToCert   :: !(Maybe FilePath),
+    pathToKey    :: !(Maybe FilePath),
     documentRoot :: !FilePath
   }
   deriving (Show, Eq, Generic, Yaml.FromJSON, Yaml.ToJSON)
@@ -32,8 +34,8 @@ defaultConfig :: SrvConfig
 defaultConfig =
   SrvConfig
     { handlers     = [(HTTP, 8080), (HTTPS, 8443)],
-      pathToCert   = "certificate.pem",
-      pathToKey    = "key.pem",
+      pathToCert   = Nothing, -- Just "certificate.pem",
+      pathToKey    = Nothing, -- Just "key.pem",
       documentRoot = "."
     }
 
@@ -54,9 +56,15 @@ httpsHandler :: Handler -> SrvConfig -> IO ()
 httpsHandler (_, port) config = do
   putStrLn $ "Starting HTTPS server on port " <> show port
   runTLS
-    (tlsSettings (pathToCert config) (pathToKey config))
+    (getTlsSettings (pathToCert config) (pathToKey config))
     (setPort port defaultSettings)
     (staticAppFrom config)
+
+-- | create a TLS settings object from file path settings. If no file paths are
+-- provided, use the demo in-memory certificate
+getTlsSettings :: Maybe FilePath -> Maybe FilePath -> TLSSettings
+getTlsSettings (Just cert) (Just key) = tlsSettings cert key
+getTlsSettings _ _ = demoTLSSettings
 
 -- | derive all handler IO actions from the configuration
 getAllHandlers :: SrvConfig -> [IO ()]
@@ -68,19 +76,22 @@ getAllHandlers config =
       (HTTP, _)  -> httpHandler handler cfg
       (HTTPS, _) -> httpsHandler handler cfg
 
+configFile :: FilePath
+configFile = "srv.yaml"
+
 -- | start all handlers configured in config.yaml
 main :: IO ()
 main = do
   putStrLn "starting up srv..."
-  configIsPresent <- doesFileExist "config.yaml"
+  configIsPresent <- doesFileExist configFile
   config <-
     if configIsPresent
       then do
-        putStrLn "reading config.yaml..."
-        Yaml.decodeFileThrow "config.yaml"
+        putStrLn $ "reading " ++ configFile ++ "..."
+        Yaml.decodeFileThrow configFile
       else do
-        putStrLn "config.yaml not found, generating file with default config"
-        Yaml.encodeFile "config.yaml" defaultConfig
+        putStrLn $ configFile ++ " not found, generating file with default config"
+        Yaml.encodeFile configFile defaultConfig
         return defaultConfig
   -- run all handlers defined in config
   mapConcurrently_ id (getAllHandlers config)

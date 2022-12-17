@@ -25,6 +25,7 @@ source-repository head
 executable srv
   main-is: Main.hs
   other-modules:
+      DemoCertificate
       Paths_srv
   hs-source-dirs:
       app
@@ -32,8 +33,10 @@ executable srv
   build-depends:
       async
     , base >=4.7 && <5
+    , bytestring
     , containers
     , directory
+    , raw-strings-qq
     , wai
     , wai-app-static
     , warp
