@@ -6,12 +6,12 @@ cabal-version: 1.12
 
 name:           srv
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/srv#readme>
-homepage:       https://github.com/githubuser/srv#readme
-bug-reports:    https://github.com/githubuser/srv/issues
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2022 Author name here
+description:    Please see the README on GitHub at <https://github.com/thma/srv#readme>
+homepage:       https://github.com/thma/srv#readme
+bug-reports:    https://github.com/thma/srv/issues
+author:         Thomas Mahler
+maintainer:     thma@apache.org
+copyright:      2022 Thomas Mahler
 license:        Apache-2.0
 license-file:   LICENSE
 build-type:     Simple
@@ -20,7 +20,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/srv
+  location: https://github.com/thma/srv
 
 executable srv
   main-is: Main.hs
