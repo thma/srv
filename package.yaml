@@ -30,6 +30,7 @@ dependencies:
 - containers
 - raw-strings-qq
 - bytestring
+- process
 
 executables:
   srv:

@@ -38,6 +38,7 @@ executable srv
     , bytestring
     , containers
     , directory
+    , process
     , raw-strings-qq
     , wai
     , wai-app-static

@@ -14,6 +14,12 @@ import           Network.Wai.Handler.WarpTLS    (runTLS, tlsSettings, TLSSetting
 import           System.Directory               (doesFileExist)
 import           DemoCertificate                (demoTLSSettings)
 
+
+import           System.Process           (createProcess, shell, ProcessHandle)
+import           System.Info              (os)
+import           GHC.IO.Handle.Types (Handle)
+
+
 -- | a data type representing Http or Https warp handlers
 data WarpHandler = HTTP | HTTPS deriving (Show, Eq, Generic, Yaml.FromJSON, Yaml.ToJSON)
 
@@ -49,12 +55,14 @@ staticAppFrom config =
 httpHandler :: Handler -> SrvConfig -> IO ()
 httpHandler (_, port) config = do
   putStrLn $ "Starting HTTP server on port " <> show port
+  launchSiteInBrowser HTTP port
   run port $ staticAppFrom config
 
 -- create an HTTPS handler action based on config settings
 httpsHandler :: Handler -> SrvConfig -> IO ()
 httpsHandler (_, port) config = do
   putStrLn $ "Starting HTTPS server on port " <> show port
+  launchSiteInBrowser HTTPS port
   runTLS
     (getTlsSettings (pathToCert config) (pathToKey config))
     (setPort port defaultSettings)
@@ -95,3 +103,16 @@ main = do
         return defaultConfig
   -- run all handlers defined in config
   mapConcurrently_ id (getAllHandlers config)
+
+
+-- | launch the site in the default browser. 
+launchSiteInBrowser :: WarpHandler -> Int -> IO (Maybe Handle, Maybe Handle, Maybe Handle, ProcessHandle)
+launchSiteInBrowser handler port =
+  case os of
+    "mingw32" -> createProcess  (shell $ "start " ++ url)
+    "darwin"  -> createProcess  (shell $ "open " ++ url)
+    _         -> createProcess  (shell $ "xdg-open " ++ url)
+  where 
+    url = case handler of
+      HTTP  -> "http://localhost:" ++ show port
+      HTTPS -> "https://localhost:" ++ show port

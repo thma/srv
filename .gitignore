@@ -26,3 +26,6 @@ cabal.project.local~
 *.csr
 .vscode/
 *.iml
+stack.yaml.lock
+stack.yaml
+srv.yaml
