@@ -4,21 +4,19 @@
 module Main where
 
 import           Control.Concurrent.Async       (mapConcurrently_)
+import           Control.Monad                  (when)
 import qualified Data.Yaml                      as Yaml
+import           DemoCertificate                (demoTLSSettings)
 import           GHC.Generics                   (Generic)
 import           Network.Wai                    (Application)
 import           Network.Wai.Application.Static (defaultFileServerSettings,
                                                  staticApp)
 import           Network.Wai.Handler.Warp       (defaultSettings, run, setPort)
-import           Network.Wai.Handler.WarpTLS    (runTLS, tlsSettings, TLSSettings)
+import           Network.Wai.Handler.WarpTLS    (TLSSettings, runTLS,
+                                                 tlsSettings)
 import           System.Directory               (doesFileExist)
-import           DemoCertificate                (demoTLSSettings)
-
-
-import           System.Process           (createProcess, shell, ProcessHandle)
-import           System.Info              (os)
-import           GHC.IO.Handle.Types (Handle)
-
+import           System.Info                    (os)
+import           System.Process                 (createProcess, shell)
 
 -- | a data type representing Http or Https warp handlers
 data WarpHandler = HTTP | HTTPS deriving (Show, Eq, Generic, Yaml.FromJSON, Yaml.ToJSON)
@@ -28,10 +26,11 @@ type Handler = (WarpHandler, Int)
 
 -- | configuration settings that specify the behaviour of the server
 data SrvConfig = SrvConfig
-  { handlers     :: ![Handler],
-    pathToCert   :: !(Maybe FilePath),
-    pathToKey    :: !(Maybe FilePath),
-    documentRoot :: !FilePath
+  { handlers        :: ![Handler],
+    pathToCert      :: !(Maybe FilePath),
+    pathToKey       :: !(Maybe FilePath),
+    documentRoot    :: !FilePath,
+    autoOpenBrowser :: !Bool
   }
   deriving (Show, Eq, Generic, Yaml.FromJSON, Yaml.ToJSON)
 
@@ -39,10 +38,11 @@ data SrvConfig = SrvConfig
 defaultConfig :: SrvConfig
 defaultConfig =
   SrvConfig
-    { handlers     = [(HTTP, 8080), (HTTPS, 8443)],
-      pathToCert   = Nothing, -- Just "certificate.pem",
-      pathToKey    = Nothing, -- Just "key.pem",
-      documentRoot = "."
+    { handlers = [(HTTP, 8080), (HTTPS, 8443)],
+      pathToCert = Nothing, -- Just "certificate.pem",
+      pathToKey = Nothing, -- Just "key.pem",
+      documentRoot = ".",
+      autoOpenBrowser = True
     }
 
 -- | create a static WAI Application from a configuration
@@ -55,14 +55,14 @@ staticAppFrom config =
 httpHandler :: Handler -> SrvConfig -> IO ()
 httpHandler (_, port) config = do
   putStrLn $ "Starting HTTP server on port " <> show port
-  launchSiteInBrowser HTTP port
+  when (autoOpenBrowser config) $ openBrowser HTTP port
   run port $ staticAppFrom config
 
 -- create an HTTPS handler action based on config settings
 httpsHandler :: Handler -> SrvConfig -> IO ()
 httpsHandler (_, port) config = do
   putStrLn $ "Starting HTTPS server on port " <> show port
-  launchSiteInBrowser HTTPS port
+  when (autoOpenBrowser config) $ openBrowser HTTPS port
   runTLS
     (getTlsSettings (pathToCert config) (pathToKey config))
     (setPort port defaultSettings)
@@ -72,7 +72,7 @@ httpsHandler (_, port) config = do
 -- provided, use the demo in-memory certificate
 getTlsSettings :: Maybe FilePath -> Maybe FilePath -> TLSSettings
 getTlsSettings (Just cert) (Just key) = tlsSettings cert key
-getTlsSettings _ _ = demoTLSSettings
+getTlsSettings _ _                    = demoTLSSettings
 
 -- | derive all handler IO actions from the configuration
 getAllHandlers :: SrvConfig -> [IO ()]
@@ -104,15 +104,15 @@ main = do
   -- run all handlers defined in config
   mapConcurrently_ id (getAllHandlers config)
 
-
--- | launch the site in the default browser. 
-launchSiteInBrowser :: WarpHandler -> Int -> IO (Maybe Handle, Maybe Handle, Maybe Handle, ProcessHandle)
-launchSiteInBrowser handler port =
+-- | open the localhost site in the default browser.
+openBrowser :: WarpHandler -> Int -> IO ()
+openBrowser handler port = do
   case os of
-    "mingw32" -> createProcess  (shell $ "start " ++ url)
-    "darwin"  -> createProcess  (shell $ "open " ++ url)
-    _         -> createProcess  (shell $ "xdg-open " ++ url)
-  where 
+    "mingw32" -> createProcess (shell $ "start " ++ url)
+    "darwin"  -> createProcess (shell $ "open " ++ url)
+    _         -> createProcess (shell $ "xdg-open " ++ url)
+  return ()
+  where
     url = case handler of
       HTTP  -> "http://localhost:" ++ show port
       HTTPS -> "https://localhost:" ++ show port

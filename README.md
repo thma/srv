@@ -48,11 +48,14 @@ and some browsers will even refuse to connect.)
 By default, `srv` will serve the current directory. You can change this by
 editing the entry `documentRoot` in the `srv.yaml` file.
 
+By default `srv` will also open a browser window pointing to the directory configured in `documentRoot`. This behaviour can be changed by setting the entry `autoOpenBrowser` to `false`.
+
 ## Configuration
 
 Here is a sample configuration file:
 
 ```yaml
+autoOpenBrowser: true
 documentRoot: .
 handlers:
 - - HTTP
